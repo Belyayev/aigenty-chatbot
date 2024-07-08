@@ -17,6 +17,7 @@ def read_root():
 
 @app.get("/health")
 def health_check():
+    conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
