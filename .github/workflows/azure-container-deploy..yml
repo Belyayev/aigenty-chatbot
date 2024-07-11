@@ -1,0 +1,76 @@
+name: Build and Deploy to Azure
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      # Step 3: Log in to Azure CLI
+      - name: Log in to Azure CLI
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # Step 4: Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Step 5: Log in to Azure Container Registry
+      - name: Log in to Azure Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.REGISTRY_USERNAME }}.azurecr.io
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      # Step 6: Create .env file with secrets
+      - name: Create .env file
+        run: |
+          echo DATABASE_URL=${{ secrets.DATABASE_URL }} >> .env
+
+      # Step 7: Build and push Docker image
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.REGISTRY_USERNAME }}.azurecr.io/aigenty-chatbot:latest
+
+      # Step 8: Check if the Azure Container Instance exists
+      - name: Check if container exists
+        id: check_container
+        run: |
+          if az container show --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name aigenty-chatbot-container &>/dev/null; then
+            echo "exists=true" >> $GITHUB_ENV
+          else
+            echo "exists=false" >> $GITHUB_ENV
+          fi
+
+      # Step 9: Stop and delete existing container if it exists
+      - name: Stop and delete existing container if it exists
+        if: env.exists == 'true'
+        run: |
+          az container stop --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name aigenty-chatbot-container
+          az container delete --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name aigenty-chatbot-container --yes
+          echo "Waiting for container to be deleted..."
+          sleep 20  # Wait for 60 seconds to ensure the container is fully deleted
+
+      # Step 10: Deploy a new Azure Container Instance
+      - name: Deploy new container
+        run: |
+          az container create --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name aigenty-chatbot-container --image ${{ secrets.REGISTRY_USERNAME }}.azurecr.io/aigenty-chatbot:latest --ports 8000 --dns-name-label aigenty-chatbot-server --environment-variables ENVIRONMENT=production --registry-login-server ${{ secrets.REGISTRY_USERNAME }}.azurecr.io --registry-username ${{ secrets.REGISTRY_USERNAME }} --registry-password ${{ secrets.REGISTRY_PASSWORD }}
