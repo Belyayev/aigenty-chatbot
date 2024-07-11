@@ -24,7 +24,19 @@ jobs:
       - name: Log in to Azure CLI
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          creds: {
+            "clientId": "aed5d797-4aa7-482c-9f9c-90b5513e744b",
+            "clientSecret": "uvG8Q~-KTpU7e.T9HGQLkM8GnGOb3kdfxOBqUaNr",
+            "subscriptionId": "ac2fb659-4fb0-4144-aa09-4a3248464539",
+            "tenantId": "8bf5796a-e68e-403e-93a9-fa0cfaa65dfa",
+            "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
+            "resourceManagerEndpointUrl": "https://management.azure.com/",
+            "activeDirectoryGraphResourceId": "https://graph.windows.net/",
+            "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
+            "galleryEndpointUrl": "https://gallery.azure.com/",
+            "managementEndpointUrl": "https://management.core.windows.net/"
+            }
+
 
       # Step 4: Set up Docker Buildx
       - name: Set up Docker Buildx
@@ -34,9 +46,9 @@ jobs:
       - name: Log in to Azure Container Registry
         uses: docker/login-action@v2
         with:
-          registry: ${{ secrets.REGISTRY_USERNAME }}.azurecr.io
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
+          registry: aigentychatbot.azurecr.io
+          username: aigentychatbot
+          password: wf3z4075boJeKV6AMHK+5lIqxIXWSJCCBJ4ZqGZVxP+ACRAIdhJ+
 
       # Step 6: Create .env file with secrets
       - name: Create .env file
@@ -49,13 +61,13 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.REGISTRY_USERNAME }}.azurecr.io/aigenty-chatbot:latest
+          tags: aigentychatbot.azurecr.io/aigenty-chatbot:latest
 
       # Step 8: Check if the Azure Container Instance exists
       - name: Check if container exists
         id: check_container
         run: |
-          if az container show --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name aigenty-chatbot-container &>/dev/null; then
+          if az container show --resource-group aigenty-chatbot --name aigenty-chatbot-container &>/dev/null; then
             echo "exists=true" >> $GITHUB_ENV
           else
             echo "exists=false" >> $GITHUB_ENV
@@ -65,12 +77,12 @@ jobs:
       - name: Stop and delete existing container if it exists
         if: env.exists == 'true'
         run: |
-          az container stop --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name aigenty-chatbot-container
-          az container delete --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name aigenty-chatbot-container --yes
+          az container stop --resource-group aigenty-chatbot --name aigenty-chatbot-container
+          az container delete --resource-group aigenty-chatbot --name aigenty-chatbot-container --yes
           echo "Waiting for container to be deleted..."
           sleep 20  # Wait for 60 seconds to ensure the container is fully deleted
 
       # Step 10: Deploy a new Azure Container Instance
       - name: Deploy new container
         run: |
-          az container create --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name aigenty-chatbot-container --image ${{ secrets.REGISTRY_USERNAME }}.azurecr.io/aigenty-chatbot:latest --ports 8000 --dns-name-label aigenty-chatbot-server --environment-variables ENVIRONMENT=production --registry-login-server ${{ secrets.REGISTRY_USERNAME }}.azurecr.io --registry-username ${{ secrets.REGISTRY_USERNAME }} --registry-password ${{ secrets.REGISTRY_PASSWORD }}
+          az container create --resource-group aigenty-chatbot --name aigenty-chatbot-container --image aigentychatbot.azurecr.io/aigenty-chatbot:latest --ports 8000 --dns-name-label aigenty-chatbot-server --environment-variables ENVIRONMENT=production --registry-login-server aigentychatbot.azurecr.io --registry-username aigentychatbot --registry-password wf3z4075boJeKV6AMHK+5lIqxIXWSJCCBJ4ZqGZVxP+ACRAIdhJ+
