@@ -31,6 +31,7 @@ az login
   az ad sp create-for-rbac --name "github-actions" --sdk-auth --role contributor --scopes /subscriptions/<subscription-id>/resourceGroups/<your-resource-group>
   ```
 
+
 #### Add `AZURE_RESOURCE_GROUP` Secret:
 
 - **Name:** `AZURE_RESOURCE_GROUP`
