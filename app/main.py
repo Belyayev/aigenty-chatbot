@@ -14,6 +14,7 @@ class QueryRequest(BaseModel):
 def read_root():
     return {"message": "FastAPI application is running"}
 
+
 @app.get("/health")
 def health_check():
     conn = None
