@@ -51,3 +51,6 @@ az login
  az acr credential show --name <your-registry-name> --query "passwords[0].value" --output tsv
 ```
 
+<!-- az container create --resource-group aigenty-portal --name aigenty-chatbot-container --image aigentychatbot.azurecr.io/aigentychatbot:latest --ports 8000 --dns-name-label aigenty-chatbot-server --environment-variables ENVIRONMENT=production --registry-login-server aigentychatbot.azurecr.io --registry-username aigentychatbot --registry-password wf3z4075boJeKV6AMHK+5lIqxIXWSJCCBJ4ZqGZVxP+ACRAIdhJ+ -->
+
+ <!-- az acr credential show --name aigenty --query "passwords[0].value" --output tsv -->

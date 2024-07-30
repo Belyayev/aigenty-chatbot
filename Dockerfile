@@ -17,7 +17,6 @@ COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
-# Copy the .env file into the Docker image
 COPY .env .env
 
 
