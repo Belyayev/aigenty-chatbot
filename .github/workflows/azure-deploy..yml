@@ -74,13 +74,8 @@ jobs:
         uses: azure/webapps-deploy@v2
         with:
           app-name: "aigenty-chatbot" # Set to your app name
-          slot-name: "production" # Optional: if using deployment slots
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: "." # Set this to your application's path if different
-
-      - name: Set startup command
-        run: |
-          az webapp config set --name aigenty-chatbot --resource-group aigenty-portal --startup-file 'source antenv/bin/activate && uvicorn app.main:app --host 0.0.0.0 --port 8000'
 
       - name: Logout from Azure
         run: az logout
