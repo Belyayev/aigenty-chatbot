@@ -19,8 +19,8 @@ jobs:
         uses: azure/docker-login@v1
         with:
           login-server: aigentychatbot.azurecr.io
-          username: "aigentychatbot" # Replace with the retrieved username
-          password: "wf3z4075boJeKV6AMHK+5lIqxIXWSJCCBJ4ZqGZVxP+ACRAIdhJ+" # Replace with the retrieved primary password
+          username: ${{ secrets.ACR_USERNAME }} # Replace with the retrieved username
+          password: ${{ secrets.ACR_PASSWORD }} # Replace with the retrieved primary password
 
       - name: Build and push Docker image
         run: |
