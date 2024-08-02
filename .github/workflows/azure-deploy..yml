@@ -12,27 +12,30 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to Azure Container Registry
-        uses: azure/docker-login@v1
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
-          login-server: aigentychatbot.azurecr.io
-          username: "aigentychatbot" # Replace with the retrieved username
-          password: "wf3z4075boJeKV6AMHK+5lIqxIXWSJCCBJ4ZqGZVxP+ACRAIdhJ+" # Replace with the retrieved primary password
+          python-version: "3.12" # Ensure this matches your Azure runtime
 
-      - name: Build and push Docker image
+      - name: Install dependencies
         run: |
-          docker build -t aigentychatbot.azurecr.io/aigenty-chatbot:latest .
-          docker push aigentychatbot.azurecr.io/aigenty-chatbot:latest
+          python -m venv antenv
+          source antenv/bin/activate
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-      - name: "Login via Azure CLI"
+      - name: Login via Azure CLI
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS_NEW }}
 
-      - name: "Deploy to Azure Web App"
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t aigentychatbot.azurecr.io/aigenty-chatbot:latest .
+          echo "1jPA+g/pxi0qkmY6UyuKzuDgOk6dwgZpPT+vVwzY+z+ACRCcQ+av" | docker login aigentychatbot.azurecr.io -u aigentychatbot --password-stdin
+          docker push aigentychatbot.azurecr.io/aigenty-chatbot:latest
+
+      - name: Configure Azure Web App
         run: |
           az webapp config container set --name aigenty-chatbot --resource-group aigenty-portal --docker-custom-image-name aigentychatbot.azurecr.io/aigenty-chatbot:latest
           az webapp config set --resource-group aigenty-portal --name aigenty-chatbot --startup-file ". antenv/bin/activate && uvicorn app.main:app --host 0.0.0.0 --port 8000"
